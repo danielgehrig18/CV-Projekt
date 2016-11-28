@@ -5,7 +5,7 @@ addpath('data', 'src', 'src/exercise1_solns', 'src/exercise2_solns', ...
     'src/exercise6_solns', 'src/exercise5_solns/8point', ...
     'src/exercise5_solns/triangulation');
 
-ds = 2; % 0: KITTI, 1: Malaga, 2: parking
+ds = 1; % 0: KITTI, 1: Malaga, 2: parking
 
 if ds == 0
     kitti_path = 'data/kitti';
@@ -14,6 +14,7 @@ if ds == 0
     ground_truth = load([kitti_path '/poses/00.txt']);
     ground_truth = ground_truth(:, [end-8 end]);
     last_frame = 4540;
+    left_images = dir([kitti_path '/00/image_0/']);
     K = [7.188560000000e+02 0 6.071928000000e+02
         0 7.188560000000e+02 1.852157000000e+02
         0 0 1];
@@ -31,7 +32,8 @@ elseif ds == 1
 elseif ds == 2
     parking_path = 'data/parking';
     % Path containing images, depths and all...
-    assert(exist('parking_path', 'var') ~= 0);
+    assert(exist('parking_path', 'var') ~= 0);    
+    images = dir([parking_path '/images']);
     last_frame = 598;
     K = load([parking_path '/K.txt']);
      
@@ -44,11 +46,13 @@ end
 %% Bootstrap
 % need to set bootstrap_frames
 if ds == 0
+    bootstrap_frames = getBootStrapFrames(K, left_images); 
     img0 = imread([kitti_path '/00/image_0/' ...
         sprintf('%06d.png',bootstrap_frames(1))]);
     img1 = imread([kitti_path '/00/image_0/' ...
         sprintf('%06d.png',bootstrap_frames(2))]);
 elseif ds == 1
+    bootstrap_frames = getBootStrapFrames(K, left_images); 
     img0 = rgb2gray(imread([malaga_path ...
         '/malaga-urban-dataset-extract-07_rectified_800x600_Images/' ...
         left_images(bootstrap_frames(1)).name]));
@@ -56,6 +60,7 @@ elseif ds == 1
         '/malaga-urban-dataset-extract-07_rectified_800x600_Images/' ...
         left_images(bootstrap_frames(2)).name]));
 elseif ds == 2
+    bootstrap_frames = getBootStrapFrames(K, images);
     img0 = rgb2gray(imread([parking_path ...
         sprintf('/images/img_%05d.png',bootstrap_frames(1))]));
     img1 = rgb2gray(imread([parking_path ...
